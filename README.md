@@ -1,23 +1,45 @@
-# Project Plan: AI Interviewer
+# Project Plan: AI Interviewer (v2.0)
 
-**Version:** 1.0
-**Date:** June 24, 2024
+**Version:** 2.0
+**Date:** June 25, 2025
 
 ## Overview
 
-This document outlines the comprehensive project plan, technical analysis, and development timeline for the "AI Interviewer" project. The primary goal is to develop a stable, real-time, multimodal interview prototype suitable for in-house testing and validation.
+This document outlines the comprehensive project plan, technical analysis, and development timeline for the "AI Interviewer" project. The primary goal is to develop a stable, **modular, and production-ready** prototype suitable for in-house testing and validation.
 
-The system will be built upon an **"Integrated, High-Cohesion"** architecture, designed for parallel processing of data streams to ensure minimal latency and a holistic analysis of candidate communication.
+The system will be built upon a **"Two-Speed" Microservices Architecture**, designed to provide a low-latency conversational experience while performing rich data analysis in parallel. This document serves as the foundational resource for development.
 
-This living document, maintained within the project's official GitHub repository, is intended to fulfill the initial planning requirements and serve as a foundational resource for current and future developers.
+---
+### Table of Contents
+
+- [Project Plan: AI Interviewer (v2.0)](#project-plan-ai-interviewer-v20)
+  - [Overview](#overview)
+    - [Table of Contents](#table-of-contents)
+  - [Section 1: Technology and Resource Analysis](#section-1-technology-and-resource-analysis)
+    - [1.1 Multimodal Input Processing](#11-multimodal-input-processing)
+      - [Voice Activity Detection (VAD)](#voice-activity-detection-vad)
+      - [Speech-to-Text (STT)](#speech-to-text-stt)
+      - [Visual Analysis (Video Stream)](#visual-analysis-video-stream)
+      - [Vocal Analysis (Audio Stream)](#vocal-analysis-audio-stream)
+    - [1.2 Core Engine and Response Synthesis](#12-core-engine-and-response-synthesis)
+      - [Large Language Model (LLM)](#large-language-model-llm)
+      - [Text-to-Speech (TTS)](#text-to-speech-tts)
+    - [1.3 Infrastructure and Orchestration](#13-infrastructure-and-orchestration)
+  - [Section 2: Proposed System Architecture](#section-2-proposed-system-architecture)
+    - [2.1 Architectural Flow: The Story of an Interview](#21-architectural-flow-the-story-of-an-interview)
+    - [2.2 System Diagrams](#22-system-diagrams)
+      - [Diagram 2.2.1: High-Level System Overview](#diagram-221-high-level-system-overview)
+      - [Diagram 2.2.2: The Real-Time AI Engine (Detailed View)](#diagram-222-the-real-time-ai-engine-detailed-view)
+      - [Diagram 2.2.3: Asynchronous Reporting Workflow](#diagram-223-asynchronous-reporting-workflow)
+  - [Section 3: A Phased Plan for Development](#section-3-a-phased-plan-for-development)
+    - [**Revised Submission Deadline**](#revised-submission-deadline)
+
 
 ---
 
 ## Section 1: Technology and Resource Analysis
 
-A thorough analysis of available open-source tools and frameworks has been conducted to select the optimal technology stack. The criteria for selection included performance, licensing (permissive licenses preferred), ease of local deployment, and community support.
-
-The following tables detail the chosen components, the rationale for their selection, and the alternatives that were considered.
+A thorough analysis of available tools was conducted. The following tables detail the chosen components for the AI modules and the necessary supporting infrastructure.
 
 ### 1.1 Multimodal Input Processing
 
@@ -72,130 +94,176 @@ To create a natural conversational experience, the AI's text-based responses mus
 | :--- | :--- | :--- | :--- |
 | **Text-to-Speech (TTS)** | **`Kokoro TTS`** | **High-Quality Voice:** Produces natural and realistic-sounding speech. <br><br> **Low Latency:** Optimized for real-time generation, which is critical for interactive applications. <br><br> **Permissive License:** Apache 2.0 license allows for broad use. | `Piper TTS`: A very strong and fast alternative, also optimized for local deployment on devices like the Raspberry Pi. <br><br> `Coqui TTS`: Historically a very popular choice, but recent licensing changes have made it less suitable for new commercial projects. |
 
-### 1.3 System Orchestration
+### 1.3 Infrastructure and Orchestration
 
-This component is the glue that connects all other modules, managing the flow of data and logic between the input processors, the LLM, and the response synthesizers.
+To support a modular and scalable system, the following infrastructure components have been selected.
 
 | Component | Selected Tool | Key Features / Rationale | Alternatives Considered |
 | :--- | :--- | :--- | :--- |
-| **Orchestration Framework** | **`LangChain`** | **Mature & Feature-Rich:** Provides a robust set of tools, abstractions, and integrations specifically designed for building LLM-powered applications. <br><br> **Standardization:** Using a well-known framework makes the system easier for new developers to understand and maintain. <br><br> **Strong Community:** Large community means extensive documentation, tutorials, and support. | `LlamaIndex`: More heavily focused on Retrieval-Augmented Generation (RAG) and might be less flexible for our agent-like architecture. <br><br> **Custom Code (e.g., FastAPI/Flask):** Offers maximum flexibility but requires writing and maintaining significant boilerplate code for logic, state management, and tool integration. |
+| **Containerization** | **`Docker`** | **Industry Standard:** Provides OS-level virtualization to package each microservice and its dependencies into isolated containers. <br><br> **Portability & Scalability:** Ensures consistency from development to production and simplifies scaling individual services. | `Podman`: A daemonless alternative to Docker. <br><br> Virtual Machines: Heavier and less efficient for microservice architectures. |
+| **Real-Time Communication** | **`FastRTC`** | **High-Level Abstraction:** As specified in project research, this provides a simplified API over WebRTC for real-time audio/video streaming. | `aiortc`: A lower-level Python library for WebRTC, offering more control but requiring more implementation effort. |
+| **System Orchestration** | **`LangChain`** | **LLM-Native Framework:** Provides a robust set of tools and abstractions designed for building complex, agent-like applications that connect LLMs to other services. <br><br> **Standardization:** Using a well-known framework makes the system easier to maintain. | `LlamaIndex`: A strong alternative specializing in Retrieval-Augmented Generation (RAG). <br><br> `Custom Code (FastAPI)`: Offers maximum flexibility but requires significant boilerplate code. |
+| **Operational Database** | **`PostgreSQL`** | **Reliability & Structure:** A powerful, open-source relational database ideal for storing structured data like interview metadata, transcripts, and analysis results. <br><br> **JSONB Support:** Excellent support for storing semi-structured JSON data from AI models within a relational structure. | `MongoDB`: A NoSQL option that offers more flexibility for unstructured data but can be less ideal for relational queries between interviews and users. |
+| **Vector Database** | **`ChromaDB`** | **AI-Native & Python-Friendly:** An open-source vector database designed to be simple to use within Python applications for storing and searching embeddings. Essential for future semantic search capabilities. | `Qdrant`: A more feature-rich and performant vector database, written in Rust. <br><br> `Pinecone`: A popular managed (cloud) vector database. |
+| **File / Object Storage** | **`MinIO`** | **S3-Compatible & Self-Hosted:** An open-source object storage server that is fully compatible with the Amazon S3 API. Ideal for storing large binary files (raw audio/video) locally and is the best practice for production systems. | `Amazon S3`: The leading cloud object storage service. <br><br> `Local Filesystem`: Simple for a prototype but not scalable or suitable for production. |
+| **Asynchronous Task Queue** | **`Celery` with `RabbitMQ`** | **Robust & Scalable:** The industry-standard combination in the Python ecosystem for managing background tasks. <br><br> **Resilience:** RabbitMQ is a powerful message broker that ensures task delivery. Celery provides the framework for defining and running the tasks (like our report generator). | `Redis` (as a broker): Simpler to set up than RabbitMQ but less feature-rich for complex routing. <br><br> `Dramatiq`: A simpler alternative to Celery. |
 
 
 ---
 
 ## Section 2: Proposed System Architecture
 
-This section details the "Integrated, High-Cohesion" architecture of the AI Interviewer. The design prioritizes parallel processing of multiple data streams to ensure low latency and a holistic, real-time analysis of the candidate's verbal and non-verbal cues.
+The system is designed as a **"Two-Speed" Microservices Architecture** to balance the demands of real-time conversation with thorough, parallel data analysis. This modular approach ensures low conversational latency for the candidate while capturing rich data for a comprehensive, automated report for HR.
 
-### 2.1 Architectural Flow
+The architecture is composed of four primary logical areas:
+1.  **The Client Application:** The user-facing web interface.
+2.  **The Real-Time AI Engine:** A collection of microservices that handle the live interview.
+3.  **The Data Platform:** The central repository for all stored data, including transcripts, analysis, and raw media files.
+4.  **Asynchronous Workers:** Background processes that handle non-time-critical tasks like generating the final report.
 
-The system is logically divided into two main parts: a client-side interface running in the user's browser, and a server-side AI engine where the core processing occurs. The real-time communication between these two parts is handled by **FastRTC**, which manages the WebRTC data channels.
+### 2.1 Architectural Flow: The Story of an Interview
 
-The end-to-end flow for a single interaction is as follows:
+To understand how these parts work together, let's follow the journey of a single interview from start to finish.
 
-1.  **Client-Side Capture:** The user interacts with a web interface. The **FastRTC client library** captures audio and video from the user's microphone and camera.
-2.  **Real-Time Transport:** FastRTC streams this data with low latency to the server-side AI engine via a secure WebRTC connection.
-3.  **Server-Side Ingestion:** A **FastRTC Server Endpoint** receives the raw audio and video streams.
-4.  **Parallel Processing:** The streams are passed to their respective processing pipelines:
-    * **Audio Pipeline:** The audio stream is fed through the VAD, STT, and SER modules.
-    * **Video Pipeline:** The video stream is simultaneously processed by the FER and Gesture Analysis modules.
-5.  **Orchestration & Fusion:** The **LangChain Orchestrator** receives the structured outputs (e.g., text, emotions, gestures) from all pipelines.
-6.  **Cognitive Core:** The orchestrator fuses this multimodal data into a comprehensive prompt for the **Qwen3 LLM**. The LLM analyzes the context and generates the AI interviewer's next response or question.
-7.  **Response Synthesis:** The LLM's text response is sent to the **Kokoro TTS** module, which converts it into audio.
-8.  **Response Delivery:** The synthesized audio is streamed back to the user's browser via the FastRTC connection, completing the conversational loop.
+1.  **The Interview Begins:** A candidate joins the interview via the web interface. Their browser, using the **FastRTC** library, establishes a secure, real-time connection to our server and begins streaming their audio and video.
 
-### 2.2 System Diagram
+2.  **The Real-Time Conversation (The "Hot Path"):** The AI engine immediately begins processing the audio stream on its lowest-latency path. The `VAD` service detects speech, which is instantly transcribed by the `STT` service. The `Orchestrator` receives the text, sends it to the `LLM` for a quick conversational response, and the `TTS` service speaks the AI's reply back to the candidate. This entire loop is optimized to feel like a natural conversation.
 
-The following diagram illustrates the flow of data and the interaction between the system's components.
+3.  **Parallel Analysis (The "Warm Path"):** Simultaneously, the raw audio and video streams are being processed on a separate, parallel path. The `SER`, `FER`, and `Gesture Analysis` services are continuously analyzing the streams. They don't need to finish in real-time; their job is to tag moments with rich data (e.g., "sentiment: joy at timestamp 02:15") and save this analysis to the **Database**, perfectly synchronized with the transcript from the Hot Path.
+
+4.  **The Interview Concludes:** When the interview ends, the `Orchestrator` publishes an `interview_completed` event to the **Message Queue** and saves the raw audio/video files to **Object Storage**.
+
+5.  **Asynchronous Reporting:** An **Asynchronous Worker**, which is always listening for `interview_completed` events, picks up the task. It queries the **Database** to retrieve the full transcript and all the associated multimodal analysis for the session. It then uses the **LLM** in a more powerful, analytical mode to generate the final, detailed candidate report and delivers it to HR.
+
+### 2.2 System Diagrams
+
+To visualize this architecture clearly without being overwhelming, we'll use a series of diagrams, from a high-level overview to more detailed component views.
+
+#### Diagram 2.2.1: High-Level System Overview
+
+This diagram shows the four main logical areas of our system and how they interact. It provides the "at a glance" view.
 
 ```mermaid
-
 graph TD
-    subgraph "Client-Side (User's Browser)"
-        A[Web Interface UI]
-        B["FastRTC Client <br> (Capture Mic/Cam)"]
-        A -- Interacts with --> B
-    end
+    A["Client Application <br> (User's Browser)"]
+    B["Real-Time AI Engine <br> (Microservices)"]
+    C["Data Platform <br> (Databases & Storage)"]
+    D["Asynchronous Workers <br> (Report Generation)"]
 
-    subgraph "Server-Side (AI Engine)"
-        C["FastRTC Server Endpoint <br> (Receives Streams)"]
-        D{"Orchestrator <br> (LangChain)"}
-        
-        subgraph "Audio Pipeline"
-            E[VAD] --> F[STT] --> G[SER]
+    A -- "Real-Time A/V Streams & Responses" <--> B
+    B -- "Saves Transcript & Analysis" --> C
+    B -- "Triggers Job on Interview End" --> D
+    D -- "Reads Data for Report" --> C
+```
+#### Diagram 2.2.2: The Real-Time AI Engine (Detailed View)
+
+This diagram "zooms in" on the Real-Time AI Engine, showing the Hot and Warm paths working in parallel.
+
+
+```mermaid
+graph TD
+    %% Define the main components first
+    CLIENT_IN["A/V Streams In <br> (from Client)"]
+    CLIENT_OUT["Audio Response Out <br> (to Client)"]
+    
+
+    subgraph "Real-Time AI Engine"
+        DATABASE["Data Out <br> (to Database)"]
+        MESSAGE_Q["Event Out <br> (to Message Queue)"]
+        subgraph "Hot Path (Low Latency)"
+            H1[VAD & STT Services] --> H2{Orchestrator}
+            H2 <--> H3(LLM Service)
+            H2 -- "Text to Speak" --> H4[TTS Service]
+        end
+
+        subgraph "Warm Path (Parallel Analysis)"
+            W1[SER Service]
+            W2[FER & Gesture Service]
         end
         
-        subgraph "Video Pipeline"
-            H[FER] --> I[Gesture Analysis]
-        end
+        %% Internal Connections
+        CLIENT_IN -- "Audio Stream" --> H1
+        H4 -- "Synthesized Audio" --> CLIENT_OUT
         
-        J("LLM Core <br> Qwen3")
-        K("TTS Engine <br> Kokoro TTS")
-
-        C --> E
-        C --> H
-        
-        G -- "Text, Vocal Emotion" --> D
-        F -- "Transcript" --> D
-        I -- "Gestures, Facial Emotion" --> D
-        
-        D -- "Fused Context" --> J
-        J -- "Text Response" --> D
-        
-        D -- "Text for Speech" --> K
-        K -- "Synthesized Audio Stream" --> C
+        CLIENT_IN -- "Audio Stream" --> W1
+        CLIENT_IN -- "Video Stream" --> W2
     end
 
-    B -- "Real-Time Audio/Video Streams" --> C
-    C -- "Synthesized Audio Response" --> B
+    %% Connections from Engine to External Systems
+    H2 -- "Save Transcript" --> DATABASE
+    W1 -- "Vocal Analysis" --> DATABASE
+    W2 -- "Visual Analysis" --> DATABASE
+    H2 -- "Interview End" --> MESSAGE_Q
+
 ```
 
 
+#### Diagram 2.2.3: Asynchronous Reporting Workflow
+
+This final diagram illustrates the simple, robust process for generating the final report after the interview is over.
+
+```mermaid
+graph TD
+    subgraph "Asynchronous Reporting Workflow"
+        %% Node Definitions
+        MQ["Message Queue"]
+        DB[(Database)]
+        Worker["Report Generation Worker"]
+        LLM["LLM Service"]
+        HR["HR Dashboard"]
+
+        %% Flow Connections
+        MQ -- "'Interview End' Task" --> Worker;
+        DB -- "Full Session Data" --> Worker;
+        Worker -- "Generate Report Prompt" --> LLM;
+        LLM -- "Return Detailed Report" --> Worker;
+        Worker -- "Saves & Delivers Final Report" --> HR;
+    end
+```
+
 ---
 
-## Section 3: Detailed Project Timeline
+## Section 3: A Phased Plan for Development
 
-This section outlines the proposed development plan as an actionable checklist.
 
-*Disclaimer: These durations are high-level estimates and may be subject to change based on development complexity and testing outcomes.*
+- [ ] **Phase 1: Blueprint and Foundation (1 Week)**
+    - **Goal:** To finalize the complete architectural design and prepare the project groundwork.
+    - [ ] Finalize this project plan document, ensuring all stakeholders are in agreement.
+    - [ ] Establish the project's code repository with best practices for version control.
+    - [ ] Design the official "communication rules" (the API specifications) that will allow all of the system's independent components to talk to each other flawlessly.
+    - [ ] Prepare the local development environment so work can begin smoothly.
+    > **Deliverable:** A complete and approved project blueprint and a ready-to-use development environment.
 
-- [ ] **Phase 1: Planning & Setup** (3 Days)
-    - [ ] Finalize project plan and technical documentation (this `README.md`).
-    - [ ] Initialize Git repository.
-    - [ ] Set up development environments (Docker, Conda).
-    > **Deliverable:** A finalized and approved `README.md` document in the main branch of the project repository.
+- [ ] **Phase 2: Building the Core Conversation Engine (2 Weeks)**
+    - **Goal:** To bring the AI's basic conversational ability to life.
+    - [ ] Construct the core service that listens for the candidate's speech and transcribes it into text (the "ears" of the system).
+    - [ ] Construct the service that takes text and synthesizes it into natural-sounding speech (the "voice" of the system).
+    - [ ] Develop the central "brain" (the Orchestrator) that connects these two services to the Large Language Model, enabling a basic voice-in, voice-out conversation.
+    > **Deliverable:** A functional "chatbot" skeleton that proves the fundamental conversational loop works.
 
-- [ ] **Phase 2: Backend & Communication Layer** (1 Week)
-    - [ ] Set up a basic server (e.g., using FastAPI).
-    - [ ] Implement the FastRTC server endpoint to receive audio/video streams.
-    - [ ] Create a basic test client to send a stream to the server.
-    > **Deliverable:** A functioning server that can successfully receive a WebRTC stream from a client.
+- [ ] **Phase 3: Developing the Analytical Senses (1.5 Weeks)**
+    - **Goal:** To build the components that analyze the rich, non-verbal data happening in parallel to the conversation.
+    - [ ] Construct the services that analyze facial expressions, gestures, and the emotional tone of the candidate's voice.
+    - [ ] Build the system's "memory" by setting up the databases and storage for all transcripts, analysis data, and media files.
+    - [ ] Connect these analytical services to the database, ensuring all insights are saved with precise timestamps.
+    > **Deliverable:** A system that can "watch" and "listen" to an interview, capturing and storing all the nuanced data it perceives.
 
-- [ ] **Phase 3: Initial Pipeline Integration** (2 Weeks)
-    - [ ] Integrate the **Audio Pipeline**: Connect the server endpoint to the VAD, STT, and SER modules.
-    - [ ] Integrate the **Video Pipeline**: Connect the server endpoint to the FER and Gesture Analysis modules.
-    > **Deliverable:** Backend services that can process incoming streams and log the outputs (text, emotions, etc.) to the console.
+- [ ] **Phase 4: Assembling the Full System (1.5 Weeks)**
+    - **Goal:** To integrate all individual components into a single, cohesive application and build the user interface.
+    - [ ] Develop the simple and clean web interface where the candidate will conduct their interview.
+    - [ ] Connect the frontend UI to the backend engine, establishing the real-time video and audio stream.
+    - [ ] Build the automated reporting system that activates after an interview, gathering all the stored data to generate a comprehensive candidate report.
+    > **Deliverable:** A fully integrated prototype. A user can complete an end-to-end interview via the UI, and a report will be generated for HR.
 
-- [ ] **Phase 4: Core Engine Integration** (2 Weeks)
-    - [ ] Set up the LangChain orchestrator.
-    - [ ] Connect the outputs of the audio/video pipelines to the orchestrator.
-    - [ ] Integrate the Qwen3 LLM to receive context from the orchestrator and generate a text response.
-    > **Deliverable:** A system where the LLM receives fused data from the pipelines and generates a relevant text-based response.
-
-- [ ] **Phase 5: End-to-End System & UI** (2 Weeks)
-    - [ ] Integrate the Kokoro TTS engine to synthesize the LLM's response.
-    - [ ] Complete the response loop by sending the synthesized audio back to the client via FastRTC.
-    - [ ] Develop a minimal "proof-of-concept" web UI for interaction.
-    > **Deliverable:** A fully functional end-to-end prototype where a user can speak and receive a spoken response from the AI.
-
-- [ ] **Phase 6: Testing & Documentation** (1 Week)
-    - [ ] Conduct internal testing and bug fixing.
-    - [ ] Refine and add to the technical documentation (e.g., API usage, setup instructions).
-    - [ ] Prepare a final project demonstration and report.
-    > **Deliverable:** A stable prototype, comprehensive documentation, and a final presentation.
+- [ ] **Phase 5: Final Polish and Handoff (1 Week)**
+    - **Goal:** To ensure the prototype is stable, reliable, and ready for demonstration.
+    - [ ] Conduct thorough testing of the complete system to find and fix any remaining bugs.
+    * [ ] Write clear documentation on how to set up, run, and use the application.
+    - [ ] Prepare and rehearse a final presentation to showcase the project's success.
+    > **Deliverable:** A stable, documented, and impressive prototype ready for its final demonstration.
 
 ---
 
 ### **Revised Submission Deadline**
 
-Based on the detailed task breakdown above, the proposed submission deadline for the fully functional prototype is **9 weeks** from the project start date.
+Based on this plan, the proposed submission deadline for the fully functional prototype is **7 weeks** from the project start date.
